@@ -1,11 +1,13 @@
 import torch
 from transformers import LlamaForCausalLM, LlamaTokenizer
 
-model_id="meta-llama/Llama-2-7b-hf"
+# model_id="meta-llama/Llama-2-7b-hf"
 
+model_id = "./tmp/llama-output"
 tokenizer = LlamaTokenizer.from_pretrained(model_id)
 
-model =LlamaForCausalLM.from_pretrained(model_id, load_in_8bit=True, device_map='auto', torch_dtype=torch.float16)
+model_id = "./tmp/llama-output"
+model = LlamaForCausalLM.from_pretrained(model_id)
 
 from pathlib import Path
 import os
@@ -43,6 +45,8 @@ model_input = tokenizer(eval_prompt, return_tensors="pt").to("cuda")
 model.eval()
 with torch.no_grad():
     print(tokenizer.decode(model.generate(**model_input, max_new_tokens=100)[0], skip_special_tokens=True))
+
+exit()
 
 model.train()
 
@@ -140,3 +144,10 @@ with profiler:
 
     # Start training
     trainer.train()
+
+tokenizer.save_pretrained(output_dir)
+model.save_pretrained(output_dir)
+
+model.eval()
+with torch.no_grad():
+    print(tokenizer.decode(model.generate(**model_input, max_new_tokens=100)[0], skip_special_tokens=True))

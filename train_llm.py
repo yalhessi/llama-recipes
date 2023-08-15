@@ -27,33 +27,31 @@ with torch.no_grad():
 
 model.train()
 
-# def create_peft_config(model):
-#     from peft import (
-#         get_peft_model,
-#         LoraConfig,
-#         TaskType,
-#         prepare_model_for_int8_training,
-#     )
+def create_peft_config(model):
+    from peft import (
+        get_peft_model,
+        LoraConfig,
+        TaskType,
+        prepare_model_for_int8_training,
+    )
 
-#     peft_config = LoraConfig(
-#         task_type=TaskType.CAUSAL_LM,
-#         inference_mode=False,
-#         r=8,
-#         lora_alpha=32,
-#         lora_dropout=0.05,
-#         target_modules = ["q_proj", "v_proj"]
-#     )
+    peft_config = LoraConfig(
+        task_type=TaskType.SEQ_2_SEQ_LM,
+        inference_mode=False,
+        r=8,
+        lora_alpha=32,
+        lora_dropout=0.05,
+        target_modules = ["q_proj", "v_proj"]
+    )
 
-#     # prepare int-8 model for training
-#     model = prepare_model_for_int8_training(model)
-#     model = get_peft_model(model, peft_config)
-#     model.print_trainable_parameters()
-#     return model, peft_config
+    # prepare int-8 model for training
+    model = prepare_model_for_int8_training(model)
+    model = get_peft_model(model, peft_config)
+    model.print_trainable_parameters()
+    return model, peft_config
 
 # create peft config
-from peft import prepare_model_for_int8_training
-model = prepare_model_for_int8_training(model)
-
+model, lora_config = create_peft_config(model)
 
 from transformers import TrainerCallback
 from contextlib import nullcontext
@@ -61,11 +59,11 @@ enable_profiler = False
 output_dir = "tmp/llama-output"
 
 config = {
-    # 'lora_config': lora_config,
+    'lora_config': lora_config,
     'learning_rate': 1e-4,
-    'num_train_epochs': 5,
+    'num_train_epochs': 10,
     'gradient_accumulation_steps': 2,
-    'per_device_train_batch_size': 16,
+    'per_device_train_batch_size': 1,
     'gradient_checkpointing': False,
 }
 
